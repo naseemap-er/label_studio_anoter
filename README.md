@@ -1,5 +1,5 @@
 # labelstudio_anoter
-LabelStudio SDK wapper
+LabelStudio SDK wapper for Create project, load dataset, pre-annotation with YOLO Models and Export annotated data
 
 ## Install
 ```bash
@@ -11,7 +11,12 @@ pip install label-studio-anoter
 ```
 ## Start Label-Studio Docker
 ```bash
-docker run -it --rm -p 192.168.3.27:8080:8080 --user root -v $(pwd)/my-label-studio:/label-studio/data --env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true --env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files -v $(pwd)/my-files:/label-studio/files heartexlabs/label-studio:latest
+docker run -it --rm -p 192.168.3.27:8080:8080 \
+       --user root -v $(pwd)/my-label-studio:/label-studio/data \
+       --env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true \
+       --env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files \
+       -v $(pwd)/my-files:/label-studio/files \
+       heartexlabs/label-studio:latest
 ```
 ## Quick Start
 
