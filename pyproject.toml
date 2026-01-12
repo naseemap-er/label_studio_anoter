@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "label_studio_anoter"
-version = "1.0"
+version = "1.1"
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ['label_studio', 'label_studio_anoter', 'label_studio_yolo', 'yolo', 'pre_annotation', 'label_studio_pre_annotation']
