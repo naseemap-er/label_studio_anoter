@@ -5,7 +5,7 @@ from PIL import Image
 import requests
 import time
 import os
-from label_studio_anoter import logging
+from label_studio_anoter.logger import logger
 
 
 class LabelStudioAnoter:
@@ -19,19 +19,19 @@ class LabelStudioAnoter:
         self.client = LabelStudio(base_url=url, api_key=api_key)
         self.local_files_serving_enabled = "true"
         self.local_files_document_root = "/label-studio/files/images"
-        self.logging = logging.getLogger(__name__)
+        self.logger = logger
         
     def load_model(self, model_name):
         from ultralytics import YOLO
         self.model_name = model_name
         self.model = YOLO(self.model_name)
-        self.logging.info(f"Model {model_name} loaded successfully.")
+        self.logger.info(f"Model {model_name} loaded successfully.")
 
     def label_studio_user(self):
         # A basic request to verify connection is working
         me = self.client.users.whoami()
-        self.logging.info(f"Connected to Label Studio as user: {me.username}")
-        self.logging.info(f"User email: {me.email}")
+        self.logger.info(f"Connected to Label Studio as user: {me.username}")
+        self.logger.info(f"User email: {me.email}")
         return me
     
     def create_project(self, project_title, label_config):
@@ -39,12 +39,12 @@ class LabelStudioAnoter:
             title=project_title,
             label_config=label_config,
         )
-        self.logging.info(f"Project '{project_title}' created with ID: {project.id}")
+        self.logger.info(f"Project '{project_title}' created with ID: {project.id}")
         return project
     
     def get_project(self, project_id):
         project = self.client.projects.get(project_id)
-        self.logging.info(f"Retrieved project '{project.title}' with ID: {project.id}")
+        self.logger.info(f"Retrieved project '{project.title}' with ID: {project.id}")
         return project
 
     def generate_label_config(self):
@@ -56,13 +56,13 @@ class LabelStudioAnoter:
             {yolo_labels}
             </RectangleLabels>
         </View>'''
-        self.logging.info("Generated label configuration from model classes.")
+        self.logger.info("Generated label configuration from model classes.")
         return label_config
 
     def create_project_with_model(self, project_title):
         label_config = self.generate_label_config()
         project = self.create_project(project_title, label_config)
-        self.logging.info(f"Project '{project_title}' created with model-based label config.")
+        self.logger.info(f"Project '{project_title}' created with model-based label config.")
         return project
 
     def import_data(self, project, path="/label-studio/files/images"):
@@ -75,7 +75,7 @@ class LabelStudioAnoter:
             
         )
         self.client.import_storage.local.sync(id=storage.id)
-        self.logging.info(f"Imported data to project ID {project.id} from local storage.")
+        self.logger.info(f"Imported data to project ID {project.id} from local storage.")
         return storage
 
     def predict_yolo(self, images, conf):
@@ -108,7 +108,7 @@ class LabelStudioAnoter:
                 scores.append(float(score))
             prediction['score'] = min(scores) if scores else 0.0
             predictions.append(prediction)
-        self.logging.info(f"Generated predictions for {len(images)} images.")
+        self.logger.info(f"Generated predictions for {len(images)} images.")
         return predictions
 
     def pre_annotate(self, project, conf=0.25):
@@ -120,8 +120,8 @@ class LabelStudioAnoter:
                 predictions = self.predict_yolo([image], conf)[0]
                 self.client.predictions.create(task=task.id, result=predictions['result'], score=predictions['score'], model_version=predictions['model_version'])
             except Exception as e:
-                self.logging.error(f"Error processing task ID {task.id}: {e}")
-        self.logging.info(f"Pre-annotated tasks in project ID {project.id}.")
+                self.logger.error(f"Error processing task ID {task.id}: {e}")
+        self.logger.info(f"Pre-annotated tasks in project ID {project.id}.")
 
     def export_yolo(self, project_id, output_root):
         os.environ["LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED"] = self.local_files_serving_enabled
@@ -130,24 +130,24 @@ class LabelStudioAnoter:
         os.environ["LABEL_STUDIO_API_KEY"] = self.api_key
 
         project = self.get_project(project_id)
-        self.logging.info(f"Exporting project: {project.title} (ID: {project.id})")
+        self.logger.info(f"Exporting project: {project.title} (ID: {project.id})")
         export = self.client.projects.exports.create(project_id, title="YOLO Full Export")
-        self.logging.info("Waiting for export to complete...")
+        self.logger.info("Waiting for export to complete...")
         while getattr(export, "status", "") == "in_progress":
             time.sleep(3)
             export = self.client.projects.exports.get(id=project_id, export_pk=export.id)
-        self.logging.info("Export completed. Downloading data...")
+        self.logger.info("Export completed. Downloading data...")
         data = self.client.projects.exports.download(id=project_id, export_pk=export.id, export_type="JSON")
         snapshot_path = os.path.join(output_root, f"project_{project_id}_snapshot.json")
         os.makedirs(output_root, exist_ok=True)
-        self.logging.info(f"Saving snapshot to {snapshot_path}")
+        self.logger.info(f"Saving snapshot to {snapshot_path}")
         with open(snapshot_path, "wb") as f:
             for chunk in data:
                 f.write(chunk)
-        self.logging.info("Converting to YOLO format...")
+        self.logger.info("Converting to YOLO format...")
         converter = Converter(config=project.label_config, project_dir=output_root)
         converter.convert_to_yolo(snapshot_path, output_root, is_dir=False)
-        self.logging.info("YOLO export completed.")
+        self.logger.info("YOLO export completed.")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
-# labelstudio_anoter
-LabelStudio SDK wapper for Create project, load dataset, pre-annotation with YOLO Models and Export annotated data
+# Label Studio Anoter
+Label Studio SDK wapper for Create project, Load dataset, Pre-annotation with YOLO Models and Export annotated data
 
 ## Install
 ```bash
