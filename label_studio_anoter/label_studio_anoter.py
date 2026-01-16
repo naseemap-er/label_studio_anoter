@@ -59,6 +59,18 @@ class LabelStudioAnoter:
         self.logger.info("Generated label configuration from model classes.")
         return label_config
 
+    def generate_label_config_from_classes(self, classes):
+        yolo_labels = '\n'.join([f'<Label value="{label}"/>' for label in classes])
+        label_config = f'''
+        <View>
+            <Image name="img" value="$image" zoom="true" width="100%" maxWidth="800" brightnessControl="true" contrastControl="true" gammaControl="true" />
+            <RectangleLabels name="label" toName="img">
+            {yolo_labels}
+            </RectangleLabels>
+        </View>'''
+        self.logger.info("Generated label configuration from provided classes.")
+        return label_config
+
     def create_project_with_model(self, project_title):
         label_config = self.generate_label_config()
         project = self.create_project(project_title, label_config)

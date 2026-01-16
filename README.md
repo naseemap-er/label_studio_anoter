@@ -51,6 +51,13 @@ label_config = """
 project = label_studio_anoter.create_project(project_title, label_config)
 ```
 ```python
+# Create label config with classes.txt
+path_to_classes = "/path/to/classes.txt"
+with open(path_to_classes, 'r') as f:
+    class_list = f.read().splitlines()
+label_config = label_studio_anoter.generate_label_config_from_classes(class_list)
+```
+```python
 # Load YOLO Model
 label_studio_anoter.load_model("yolo11m.pt")
 
